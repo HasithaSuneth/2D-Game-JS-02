@@ -16,8 +16,8 @@
   - UP - Move Up
   - Down - Move Down
 
-- SPACE => Fire
-- Enter => Restart the game
+- Space Key => Fire
+- Enter Key => Restart the game
 
 
 ## Credit:
