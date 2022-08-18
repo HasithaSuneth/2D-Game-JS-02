@@ -8,7 +8,7 @@
 
 ### Enjoy the Game!!!
 
-## ---> [Play The Game](https://hasithasuneth.github.io/2D-Game-JS-01/2DGameJS/index.html) <---
+## ---> [Play The Game](https://hasithasuneth.github.io/2D-Game-JS-02/2DGameJS/index.html) <---
 
 ## Game Controls
 
