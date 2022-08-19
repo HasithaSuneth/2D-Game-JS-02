@@ -11,10 +11,7 @@ window.addEventListener("load", function () {
       this.game = game;
       window.addEventListener("keydown", (e) => {
         if (
-          (e.key === "ArrowDown" ||
-            e.key === "ArrowUp" ||
-            e.key === "ArrowLeft" ||
-            e.key === "ArrowRight") &&
+          (e.key === "ArrowDown" || e.key === "ArrowUp") &&
           this.game.keys.indexOf(e.key) === -1
         ) {
           this.game.keys.push(e.key);
@@ -25,15 +22,131 @@ window.addEventListener("load", function () {
         } else if (e.key === "Enter") document.location.reload(true);
       });
       window.addEventListener("keyup", (e) => {
-        if (
-          e.key === "ArrowDown" ||
-          e.key === "ArrowUp" ||
-          e.key === "ArrowLeft" ||
-          e.key === "ArrowRight"
-        ) {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           this.game.keys.splice(this.game.keys.indexOf(e.key), 1);
         }
       });
+      // window.addEventListener("touchmove", (e) => {
+      //   const touchY = "";
+      //   const touchTreshold = 200;
+      //   const swipeDistanceY = e.changedTouches[0].pageY - touchY;
+      //   if (swipeDistanceY > touchTreshold) document.location.reload(true);
+      // });
+      window.addEventListener("touchstart", (e) => {
+        this.touchY = e.changedTouches[0].pageY;
+        this.touchX = e.changedTouches[0].pageX;
+        this.boundX = this.game.boundingBox.x;
+        this.boundY = this.game.boundingBox.y;
+        this.boundWidth = this.game.boundingBox.width;
+        this.boundHeight = this.game.boundingBox.height;
+        // FireKey
+        if (
+          this.touchX >=
+            this.boundX + this.boundWidth - this.boundWidth / 3.7 &&
+          this.touchX <=
+            this.boundX + this.boundWidth - this.boundWidth / 10.5 &&
+          this.touchY <= this.boundY + this.boundHeight &&
+          this.touchY >= this.boundY + this.boundHeight - this.boundHeight / 3.3
+        ) {
+          this.game.player.shootTop();
+        }
+        // DownKey
+        if (
+          this.touchX >= this.boundX + this.boundWidth / 15 &&
+          this.touchX <= this.boundX + this.boundWidth / 4.3 &&
+          this.touchY <= this.boundY + this.boundHeight &&
+          this.touchY >=
+            this.boundY + this.boundHeight - this.boundHeight / 4.5 &&
+          this.game.keys.indexOf("ArrowDown") === -1
+        ) {
+          this.game.keys.push("ArrowDown");
+        }
+        // UpKey
+        if (
+          this.touchX >= this.boundX + this.boundWidth / 15 &&
+          this.touchX <= this.boundX + this.boundWidth / 4.3 &&
+          this.touchY <=
+            this.boundY + this.boundHeight - this.boundHeight / 4 &&
+          this.touchY >=
+            this.boundY + this.boundHeight - this.boundHeight / 2 &&
+          this.game.keys.indexOf("ArrowUp") === -1
+        ) {
+          this.game.keys.push("ArrowUp");
+        }
+      });
+      window.addEventListener("touchend", (e) => {
+        this.game.keys.splice(this.game.keys.indexOf("ArrowUp"), 1);
+        this.game.keys.splice(this.game.keys.indexOf("ArrowDown"), 1);
+      });
+    }
+  }
+
+  class Mobile {
+    constructor(game) {
+      this.game = game;
+      this.width = 80;
+      this.height = 80;
+      this.upImage = upKey;
+      this.downImage = downKey;
+      this.fireImage = fireKey;
+    }
+    draw(context) {
+      context.drawImage(
+        this.upImage,
+        100,
+        this.game.height - 200,
+        this.width,
+        this.height
+      );
+      context.drawImage(
+        this.downImage,
+        100,
+        this.game.height - 100,
+        this.width,
+        this.height
+      );
+      context.drawImage(
+        this.fireImage,
+        this.game.width - 200,
+        this.game.height - 100,
+        this.width,
+        this.height
+      );
+    }
+  }
+
+  class Sound {
+    constructor() {
+      // this.fireSnd = new Audio("./sounds/fire2.wav");
+      this.fireSnd = new Audio("./sounds/fire.wav");
+      this.energySnd = new Audio("./sounds/energy.wav");
+      this.desHive = new Audio("./sounds/rlaunch.wav");
+      this.desAll = new Audio("./sounds/destroy.wav");
+      // this.hitAll = new Audio("./sounds/boom.wav");
+      this.hitAll = new Audio("./sounds/gethit.wav");
+      this.wonSnd = new Audio("./sounds/won.wav");
+      this.loseSnd = new Audio("./sounds/lose.wav");
+    }
+    fireSound() {
+      this.fireSnd.play();
+    }
+    energyGainSound() {
+      this.energySnd.play();
+    }
+    destroyHiveSound() {
+      this.desHive.play();
+    }
+    destroyEnemySound() {
+      this.desAll.play();
+    }
+    hitEnemySound() {
+      this.hitAll.play();
+    }
+    winGameSound() {
+      this.wonSnd.play();
+    }
+    loseGameSound() {
+      this.loseSnd.play();
     }
   }
 
@@ -191,6 +304,7 @@ window.addEventListener("load", function () {
         this.game.ammo--;
       }
       if (this.powerUp) this.shootBottom();
+      this.game.sound.fireSound();
     }
     shootBottom() {
       if (this.game.ammo > 0) {
@@ -431,9 +545,18 @@ window.addEventListener("load", function () {
       context.shadowColor = "black";
       context.font = this.fontSize + "px " + this.fontFamily;
       // Score
-      context.fillText("Score: " + this.game.score, 20, 40);
+      context.fillText(
+        "Score: " + this.game.score + " / " + this.game.winnigScore,
+        20,
+        40
+      );
       // Timer
-      const formattedTime = (this.game.gameTime * 0.001).toFixed(1);
+      // const formattedTime = (this.game.gameTime * 0.001).toFixed(1);
+      let formattedTime = (
+        (this.game.timeLimit - this.game.gameTime) *
+        0.001
+      ).toFixed(1);
+      if (formattedTime <= 0) formattedTime = 0;
       context.fillText("Timer: " + formattedTime, 20, 100);
       // Game over message
       if (this.game.gameOver) {
@@ -444,11 +567,21 @@ window.addEventListener("load", function () {
         if (this.game.score > this.game.winnigScore) {
           message1 = "Most Wondrous!";
           message2 = "Well done explorer";
-          message3 = "Press 'Enter' to restart";
+          if (!this.game.isMobileDevice) message3 = "Press 'Enter' to restart";
+          else message3 = "Swipe down to restart";
+          if (this.game.soundTimer) {
+            this.game.sound.winGameSound();
+            this.game.soundTimer = false;
+          }
         } else {
           message1 = "Blazes!";
           message2 = "Get my repair kit and try again!";
-          message3 = "Press 'Enter' to restart";
+          if (!this.game.isMobileDevice) message3 = "Press 'Enter' to restart";
+          else message3 = "Swipe down to restart";
+          if (this.game.soundTimer) {
+            this.game.sound.loseGameSound();
+            this.game.soundTimer = false;
+          }
         }
         context.font = "70px " + this.fontFamily;
         context.fillText(
@@ -482,10 +615,16 @@ window.addEventListener("load", function () {
     constructor(width, height) {
       this.width = width;
       this.height = height;
+      this.isMobileDevice = window.matchMedia(
+        "only screen and (max-width: 1000px)"
+      ).matches;
+      this.boundingBox = canvas.getBoundingClientRect();
       this.player = new Player(this);
       this.input = new InputHandler(this);
       this.ui = new UI(this);
       this.background = new Background(this);
+      this.mobile = new Mobile(this);
+      this.sound = new Sound();
       this.keys = [];
       this.enemies = [];
       this.particles = [];
@@ -498,11 +637,12 @@ window.addEventListener("load", function () {
       this.ammoInterval = 350;
       this.gameOver = false;
       this.score = 0;
-      this.winnigScore = 100;
+      this.winnigScore = 250;
       this.gameTime = 0;
-      this.timeLimit = 30000;
+      this.timeLimit = 40000;
       this.speed = 1;
       this.debug = false;
+      this.soundTimer = true;
     }
     update(deltaTime) {
       if (!this.gameover) this.gameTime += deltaTime;
@@ -529,6 +669,7 @@ window.addEventListener("load", function () {
       // Enemy collision
       this.enemies.forEach((enemy) => {
         enemy.update();
+        // Player hit
         if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true;
           this.addExplosion(enemy);
@@ -541,9 +682,15 @@ window.addEventListener("load", function () {
               )
             );
           }
-          if (enemy.type === "lucky") this.player.enterPowerUp();
-          else if (!this.gameOver) this.score--;
+          if (enemy.type === "lucky") {
+            this.player.enterPowerUp();
+            this.sound.energyGainSound();
+          } else if (!this.gameOver) {
+            this.score--;
+            this.sound.hitEnemySound();
+          }
         }
+        // Fire hit
         this.player.projectiles.forEach((projectile) => {
           if (this.checkCollision(projectile, enemy)) {
             enemy.lives--;
@@ -569,6 +716,7 @@ window.addEventListener("load", function () {
               enemy.markedForDeletion = true;
               this.addExplosion(enemy);
               if (enemy.type === "hive") {
+                this.sound.destroyHiveSound();
                 for (let i = 0; i < 5; i++) {
                   this.enemies.push(
                     new Drone(
@@ -578,6 +726,8 @@ window.addEventListener("load", function () {
                     )
                   );
                 }
+              } else {
+                this.sound.destroyEnemySound();
               }
               if (!this.gameOver) this.score += enemy.score;
               //   if (this.score > this.winnigScore) this.gameOver = true;
@@ -605,6 +755,7 @@ window.addEventListener("load", function () {
         explosion.draw(context);
       });
       this.background.layer4.draw(context);
+      if (this.isMobileDevice) this.mobile.draw(context);
     }
     addEnemy() {
       const randomize = Math.random();
