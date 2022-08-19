@@ -30,7 +30,10 @@
 #hivewhale,
 #drone,
 #smokeExplosion,
-#fireExplosion {
+#fireExplosion,
+#upKey,
+#downKey,
+#fireKey {
   display: none;
 }
 
